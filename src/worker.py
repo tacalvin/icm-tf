@@ -42,9 +42,10 @@ class Worker:
         rewards = np.array(rollout[:,2])
         next_obs = np.array(rollout[:,3])
         values = np.array(rollout[:,5])
-
+        bonus = np.array(rollout[:,6])
+        # TODO calculate rewards incorporating bonus than apply gradients to icm
         # Generate advantage and discounted rewards
-        self.rewards = np.asarray(rewards.tolist() + [bootstrap_val])
+        self.rewards = np.asarray(rewards.tolist() + [bootstrap_val] + bonus.tolist())
         discount_r = discount(self.rewards,gamma)[:-1]
         self.values = np.asarray(values.tolist() + [bootstrap_val])
         advantages = rewards + gamma * self.values[1:] - self.values[:-1]
@@ -58,7 +59,10 @@ class Worker:
             self.local_net.actions:actions,
             self.local_net.advantages:advantages,
             self.local_net.state_in[0]:self.batch_rnn_state[0],
-            self.local_net.state_in[1]:self.batch_rnn_state[1]
+            self.local_net.state_in[1]:self.batch_rnn_state[1],
+            self.local_net.ICM.s1:np.vstack(observations[:-1]),
+            self.local_net.ICM.s1:np.vstack(observations[1:]),
+            self.local_net.ICM.act_sample:actions.shape
         }
 
         v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run(
@@ -83,6 +87,7 @@ class Worker:
                 episode_buffer = []
                 episode_values = []
                 episode_frames = []
+                episode_bonus = 0
                 episode_reward = 0
                 episode_step_count = 0
                 d = False
@@ -115,7 +120,14 @@ class Worker:
                     if d:
                         s_ = s
                     # Append to rollout
-                    episode_buffer.append([s,a,r,s_,d,v[0,0]])
+                    bonus = sess.run(self.local_net.ICM.forward_loss,
+                                     feed_dict={
+                                         self.local_net.ICM.s1:[s],
+                                         self.local_net.ICM.s2:[s_],
+                                         self.local_net.ICM.act_sample:[a]
+                                     })
+
+                    episode_buffer.append([s,a,r,s_,d,v[0,0],bonus])
                     episode_values.append(v[0,0])
 
                     episode_reward += r

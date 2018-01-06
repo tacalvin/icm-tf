@@ -105,6 +105,10 @@ def normalized_columns_initializer(std=1.0):
 class A3C_Network():
     def __init__(self, s_size, a_size, scope, trainer):
         with tf.variable_scope(scope):
+
+            # Create ICM
+            self.ICM = ICM(s_size, a_size, scope, trainer)
+
             #Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.imageIn = tf.reshape(self.inputs, shape=[-1, 84, 84, 1])
@@ -174,4 +178,67 @@ class A3C_Network():
                 #Apply local gradients to global network
                 global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
                 self.apply_grads = trainer.apply_gradients(zip(grads,global_vars))
+
+def generic_input(x, nconvs = 4):
+    for i in range(nconvs):
+        x = slim.conv2d(x, 32, [3,3], stride=[2,2],
+                        activation_fn=tf.nn.elu, padding="SAME")
+    x = slim.flatten(x)
+    return x
+def linear(x, size, name, init=None, bias_init=0):
+    w = tf.get_variable(name + '/W', [x.get_shape()[1], size], tf.float32,
+                        initializer=init)
+    b = tf.get_variable(name + '/b', [size], tf.float32,
+                        tf.constant_initializer(bias_init))
+    return tf.matmul(x, w) + b
+
+class ICM:
+    def __init__(self, ob_space, ac_space, scope, trainer):
+        with tf.variable_scope(scope):
+            self.s1 = s1= tf.placeholder(tf.float32, [None, ob_space])
+            self.s2 = s2 = tf.placeholder(tf.float32, [None, ob_space])
+            self.act_sample = tf.placeholder(tf.float32, [None, ac_space])
+
+            units = 256
+
+            s1 = generic_input(s1)
+            s2 = generic_input(s2)
+
+            # Inverse Model
+            x = tf.concat([s1,s2],1)
+            x = slim.fully_connected(x,256, activation_fn=tf.nn.elu)
+
+            # one hot encoded action vector
+            a_index = tf.argmax(self.act_sample, axis = 1)
+            logits = linear(x, ac_space, scope, init= normalized_columns_initializer(.01))
+
+            self.inv_loss = tf.reduce_mean(
+                tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
+                                                               labels=a_index))
+            self.a_inv_probs = tf.nn.softmax(logits)
+
+            # Forward model without backprop
+            f = tf.concat([s1, self.act_sample],1)
+            f = tf.nn.relu(linear(f, units, 'f1', normalized_columns_initializer()))
+            f = linear(f, s1.get_shape()[1].value, 'flast', normalized_columns_initializer())
+            self.forward_loss = 0.5 * tf.reduce_mean(
+                tf.square(tf.subtract(f, s2)),name='forward_loss')
+            # From paper
+            self.forward_loss *= 288
+
+
+            # Worker network ops
+            if scope != 'global':
+                # Get gradients from local network using local losses
+                local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
+                self.gradients_inv = tf.gradients(self.inv_loss, local_vars)
+                self.var_norms = tf.global_norm(local_vars)
+                grads, self.grad_norms = tf.clip_by_global_norm(self.gradients_inv, 40.0)
+
+                #apply to global_network
+                global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
+                self.apply_grads = trainer.apply_gradients(zip(grads, global_vars))
+
+
+
 
