@@ -112,9 +112,15 @@ class A3C_Network():
                 activation_fn=tf.nn.elu, padding='SAME')
             self.conv2 = slim.conv2d(self.conv1, 32, [3, 3], stride=[2, 2],
                 activation_fn=tf.nn.elu, padding='SAME')
+            self.conv3 = slim.conv2d(self.conv2, 32, [3, 3], stride=[2, 2],
+                activation_fn=tf.nn.elu, padding='SAME')
+            self.conv4 = slim.conv2d(self.conv3, 32, [3, 3], stride=[2, 2],
+                activation_fn=tf.nn.elu, padding='SAME')
+
+
             #self.conv3 = slim.conv2d(self.conv2, 64, [3, 3], stride=[1, 1],
             #    activation_fn=tf.nn.elu, padding='SAME')
-            hidden = slim.fully_connected(slim.flatten(self.conv2), 256, activation_fn=tf.nn.elu)
+            hidden = slim.fully_connected(slim.flatten(self.conv4), 256, activation_fn=tf.nn.elu)
 
             #Recurrent network for temporal dependencies
             lstm_cell = tf.contrib.rnn.BasicLSTMCell(256, state_is_tuple=True)
