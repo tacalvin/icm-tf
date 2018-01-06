@@ -132,7 +132,7 @@ class Worker:
                                           self.local_net.state_in[0]:self.batch_rnn_state[0],
                                           self.local_net.state_in[1]:self.batch_rnn_state[1]
                                       })[0,0]
-                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
+                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
                         episode_buffer = []
                         sess.run(self.update_local_ops)
                     if d:
@@ -142,9 +142,10 @@ class Worker:
                 self.eps_mean.append(np.mean(episode_values))
 
                 if len(episode_buffer) != 0:
-                    v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
+                    v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
 
                 # Training diagnostics
+                print("EPS COUNT {}".format(eps_count))
                 if eps_count % 5 == 0 and eps_count != 0:
                     if eps_count % 250 == 0 and self.name == 'worker_0':
                         saver.save(sess, self.model+'/model-'+str(eps_count)+'.cptk')
