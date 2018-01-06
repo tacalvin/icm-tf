@@ -133,7 +133,7 @@ class Worker:
                                           self.local_net.state_in[0]:self.batch_rnn_state[0],
                                           self.local_net.state_in[1]:self.batch_rnn_state[1]
                                       })[0,0]
-                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
+                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
                         episode_buffer = []
                         sess.run(self.update_local_ops)
                     if d:
