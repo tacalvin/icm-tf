@@ -200,7 +200,8 @@ class ICM:
             self.act_sample = tf.placeholder(tf.float32, [None, ac_space])
 
             units = 256
-
+            s1 = tf.reshape(self.s1, shape=[-1, 84, 84, 1])
+            s2 = tf.reshape(self.s2, shape=[-1, 84, 84, 1])
             s1 = generic_input(s1)
             s2 = generic_input(s2)
 
