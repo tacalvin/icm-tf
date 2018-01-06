@@ -3,7 +3,6 @@ import scipy
 import numpy as np
 from model import A3C_Network
 from helper import *
-from vizdoom import *
 import skimage 
 from skimage import transform, color, exposure
 from skimage.transform import rotate

@@ -27,7 +27,7 @@ if not os.path.exists(model_path):
 
 with tf.device('/cpu:0'):
     global_eps = tf.Variable(0, dtype=tf.int32, name='global_episode',trainable=False)
-    trainer = tf.train.AdamOptimizer(learning_rate=1e-4)
+    trainer = tf.train.AdamOptimizer(learning_rate=1e-3)
     global_network = A3C_Network(obv_space, action_space,'global', None)
     num_workers = 4 #multiprocessing.cpu_count() -1
     workers = []

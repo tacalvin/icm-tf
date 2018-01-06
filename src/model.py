@@ -108,9 +108,9 @@ class A3C_Network():
             #Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
             self.imageIn = tf.reshape(self.inputs, shape=[-1, 84, 84, 1])
-            self.conv1 = slim.conv2d(self.imageIn, 16, [8, 8], stride=[4, 4],
+            self.conv1 = slim.conv2d(self.imageIn, 32, [3, 3], stride=[2, 2],
                 activation_fn=tf.nn.elu, padding='SAME')
-            self.conv2 = slim.conv2d(self.conv1, 32, [4, 4], stride=[2, 2],
+            self.conv2 = slim.conv2d(self.conv1, 32, [3, 3], stride=[2, 2],
                 activation_fn=tf.nn.elu, padding='SAME')
             #self.conv3 = slim.conv2d(self.conv2, 64, [3, 3], stride=[1, 1],
             #    activation_fn=tf.nn.elu, padding='SAME')
