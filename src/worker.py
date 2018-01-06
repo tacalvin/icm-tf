@@ -120,6 +120,8 @@ class Worker:
                     if d:
                         s_ = s
                     # Append to rollout
+                    print(a.shape)
+                    quit()
                     bonus = sess.run(self.local_net.ICM.forward_loss,
                                      feed_dict={
                                          self.local_net.ICM.s1:[s],
