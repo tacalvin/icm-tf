@@ -133,7 +133,9 @@ class ICM:
             self.a_inv_probs = tf.nn.softmax(logits)
 
             # Forward model without backprop
-            f = tf.concat([s1, self.act_sample],1)
+            print("S1 {}".format(s1))
+            print("ACT_SAMPL {}".format(self.act_sample))
+            f = tf.concat(axis=1,values=[s1, self.act_sample])
             f = tf.nn.relu(linear(f, units, 'f1', normalized_columns_initializer()))
             f = linear(f, s1.get_shape()[1].value, 'flast', normalized_columns_initializer())
             self.forward_loss = 0.5 * tf.reduce_mean(
