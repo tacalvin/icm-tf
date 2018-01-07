@@ -9,7 +9,7 @@ from skimage.transform import rotate
 
 def process_frame(frame):
     s = skimage.color.rgb2gray(frame)
-    s = scipy.misc.imresize(s,[84,84])
+    s = scipy.misc.imresize(s,[42,42])
     s = np.reshape(s,[np.prod(s.shape)]) / 255.0
     return s
 
@@ -34,10 +34,10 @@ class Worker:
         # Update the local variables to match global network
         self.update_local_ops = update_target_graph('global', self.name)
 
-    def train(self, rollout, sess, gamma, bootstrap_val):
+    def train(self, rollout, sess, gamma, bootstrap_val, end_state):
         rollout = np.array(rollout)
         # Ideally rollout batch will be [:,0-3] with each row being an observation
-        observations = np.array(rollout[:,0])
+        observations = np.array(rollout[:,0] + [end_state])
         actions = np.array(rollout[:,1])
         rewards = np.array(rollout[:,2])
         next_obs = np.array(rollout[:,3])
@@ -56,14 +56,14 @@ class Worker:
         # Generate network stats
         feed_dict = {
             self.local_net.target_v:discount_r,
-            self.local_net.inputs:np.vstack(observations),
+            self.local_net.inputs:np.vstack(observations)[:-1],
             self.local_net.actions:actions,
             self.local_net.advantages:advantages,
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1],
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
             self.local_net.ICM.s2:np.vstack(observations[1:]),
-            self.local_net.ICM.act_sample:np.vstack(actions_one_hot[:-1])
+            self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
         print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
                                               self.local_net.ICM.s2,
@@ -73,7 +73,7 @@ class Worker:
         feed_dict = {
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
             self.local_net.ICM.s2:np.vstack(observations[1:]),
-            self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
+            self.local_net.ICM.act_sample:np.vstack(actions_one_hot[:-1])
         }
         output = sess.run(self.local_net.ICM.f, feed_dict=feed_dict)
         print("SHAPES {} {} {}".format(np.vstack(observations[:-1]).shape,
@@ -107,6 +107,7 @@ class Worker:
                 episode_values = []
                 episode_frames = []
                 episode_bonus = 0
+                end_state = None
                 episode_reward = 0
                 episode_step_count = 0
                 d = False
@@ -150,7 +151,11 @@ class Worker:
                                          self.local_net.ICM.act_sample:[a_one_hot]
                                      })
 
+                    # End state needs to be pushed aka s_ since this is using icm so
+                    # The batch of states needs to be one more than the action batch input
+                    # Input should only be states[:-1]
                     episode_buffer.append([s,a,r,s_,d,v[0,0],bonus,a_one_hot])
+                    end_state = s_
                     episode_values.append(v[0,0])
 
                     episode_reward += r
@@ -167,7 +172,7 @@ class Worker:
                                           self.local_net.state_in[0]:self.batch_rnn_state[0],
                                           self.local_net.state_in[1]:self.batch_rnn_state[1]
                                       })[0,0]
-                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1)
+                        v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, v1, end_state)
                         episode_buffer = []
                         sess.run(self.update_local_ops)
                     if d:
@@ -177,7 +182,7 @@ class Worker:
                 self.eps_mean.append(np.mean(episode_values))
 
                 if len(episode_buffer) != 0:
-                    v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0)
+                    v_l, p_l, e_l, g_n, v_n = self.train(episode_buffer, sess, gamma, 0.0, end_state)
 
                 # Training diagnostics
                 print("EPS COUNT {}".format(eps_count))

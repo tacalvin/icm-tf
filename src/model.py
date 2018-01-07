@@ -21,7 +21,7 @@ class A3C_Network():
 
             #Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None, s_size], dtype=tf.float32)
-            self.imageIn = tf.reshape(self.inputs, shape=[-1, 84, 84, 1])
+            self.imageIn = tf.reshape(self.inputs, shape=[-1, 42, 42, 1])
             self.conv1 = slim.conv2d(self.imageIn, 32, [3, 3], stride=[2, 2],
                 activation_fn=tf.nn.elu, padding='SAME')
             self.conv2 = slim.conv2d(self.conv1, 32, [3, 3], stride=[2, 2],
@@ -111,8 +111,8 @@ class ICM:
 
             units = 256
             print("S1{}".format(self.s1))
-            s1 = tf.reshape(self.s1, shape=[-1, 84, 84, 1])
-            s2 = tf.reshape(self.s2, shape=[-1, 84, 84, 1])
+            s1 = tf.reshape(self.s1, shape=[-1, 42, 42, 1])
+            s2 = tf.reshape(self.s2, shape=[-1, 42, 42, 1])
             s1 = generic_input(s1)
             s2 = generic_input(s2)
 
