@@ -107,7 +107,7 @@ class ICM:
         with tf.variable_scope(scope):
             self.s1 = s1= tf.placeholder(tf.float32, [None, ob_space])
             self.s2 = s2 = tf.placeholder(tf.float32, [None, ob_space])
-            self.act_sample = tf.placeholder(tf.float32, [ac_space])
+            self.act_sample = tf.placeholder(tf.float32, shape=[None, ac_space])
 
             units = 256
             s1 = tf.reshape(self.s1, shape=[-1, 84, 84, 1])
@@ -122,11 +122,14 @@ class ICM:
             # one hot encoded action vector
             a_index = tf.argmax(self.act_sample)
             logits = linear(x, ac_space, 'last', normalized_columns_initializer())
+            print(logits)
+            print(a_index)
+            
 
             self.inv_loss = tf.reduce_mean(
                 tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
                                                                labels = a_index))
-
+            print("LOSS SUCCESS")
             self.a_inv_probs = tf.nn.softmax(logits)
 
             # Forward model without backprop
