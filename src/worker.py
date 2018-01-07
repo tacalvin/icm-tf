@@ -37,8 +37,8 @@ class Worker:
     def train(self, rollout, sess, gamma, bootstrap_val, end_state):
         rollout = np.array(rollout)
         # Ideally rollout batch will be [:,0-3] with each row being an observation
-        observations = np.array(rollout[:,0])
-        observations = np.vstack([observations, end_state])
+        observations = np.vstack(np.array(rollout[:,0]))
+        observations = np.vstack([observations, np.array(end_state)])
         actions = np.array(rollout[:,1])
         rewards = np.array(rollout[:,2])
         next_obs = np.array(rollout[:,3])
