@@ -62,8 +62,8 @@ class Worker:
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1],
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
-            self.local_net.ICM.s1:np.vstack(observations[1:]),
-            self.local_net.ICM.act_sample:actions_one_hot
+            self.local_net.ICM.s1:np.vstack(observations[1:])
+            #self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
 
         v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run(
