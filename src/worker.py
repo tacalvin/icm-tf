@@ -71,17 +71,9 @@ class Worker:
                                               self.local_net.ICM.act_sample,
                                               self.local_net.ICM.f))
         #TODO Major issue is that the number of states is one less than the number of actions in the batch
-        feed_dict = {
-            self.local_net.ICM.s1:np.vstack(observations[:-1]),
-            self.local_net.ICM.s2:np.vstack(observations[1:]),
-            self.local_net.ICM.act_sample:np.vstack(actions_one_hot[:-1])
-        }
-        output = sess.run(self.local_net.ICM.f, feed_dict=feed_dict)
         print("SHAPES {} {} {}".format(np.vstack(observations[:-1]).shape,
                                        np.vstack(observations[1:]).shape,
                                        np.vstack(actions_one_hot).shape))
-
-        quit()
 
         v_l, p_l, inv_loss,e_l, g_n, v_n, self.batch_rnn_state, _, __ = sess.run(
             [self.local_net.value_loss,
