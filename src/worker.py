@@ -37,7 +37,8 @@ class Worker:
     def train(self, rollout, sess, gamma, bootstrap_val, end_state):
         rollout = np.array(rollout)
         # Ideally rollout batch will be [:,0-3] with each row being an observation
-        observations = np.array(rollout[:,0] + [end_state])
+        observations = np.array(rollout[:,0])
+        observations = np.vstack([observations, end_state])
         actions = np.array(rollout[:,1])
         rewards = np.array(rollout[:,2])
         next_obs = np.array(rollout[:,3])
@@ -56,13 +57,13 @@ class Worker:
         # Generate network stats
         feed_dict = {
             self.local_net.target_v:discount_r,
-            self.local_net.inputs:np.vstack(observations)[:-1],
+            self.local_net.inputs:observations[:-1],
             self.local_net.actions:actions,
             self.local_net.advantages:advantages,
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1],
-            self.local_net.ICM.s1:np.vstack(observations[:-1]),
-            self.local_net.ICM.s2:np.vstack(observations[1:]),
+            self.local_net.ICM.s1:observations[:-1],
+            self.local_net.ICM.s2:observations[1:],
             self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
         print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
