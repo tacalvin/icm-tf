@@ -146,9 +146,13 @@ class ICM:
             if scope != 'global':
                 # Get gradients from local network using local losses
                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
-                self.gradients_inv = tf.gradients(self.inv_loss, local_vars)
+
+                # Loss Function
+                icm_loss = 10.0 * (self.inv_loss * (1-.2) + self.forward_loss*.2)
+                self.icm_grad = tf.gradients(icm_loss * 20, local_vars)
+
                 self.var_norms = tf.global_norm(local_vars)
-                grads, self.grad_norms = tf.clip_by_global_norm(self.gradients_inv, 40.0)
+                grads, self.grad_norms = tf.clip_by_global_norm(self.icm_grad, 40.0)
 
                 #apply to global_network
                 global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')

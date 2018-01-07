@@ -62,18 +62,22 @@ class Worker:
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1],
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
-            self.local_net.ICM.s1:np.vstack(observations[1:])
-            #self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
+            self.local_net.ICM.s1:np.vstack(observations[1:]),
+            self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
 
-        v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run(
+
+
+        v_l, p_l, inv_loss,e_l, g_n, v_n, self.batch_rnn_state, _, __ = sess.run(
             [self.local_net.value_loss,
              self.local_net.policy_loss,
+             self.local_net.ICM.inv_loss,
              self.local_net.entropy,
              self.local_net.grad_norms,
              self.local_net.var_norms,
              self.local_net.state_out,
-             self.local_net.apply_grads],
+             self.local_net.apply_grads,
+             self.local_net.ICM.apply_grads],
             feed_dict=feed_dict)
 
         return v_l / len(rollout),p_l / len(rollout),e_l / len(rollout), g_n,v_n
