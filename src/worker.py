@@ -62,11 +62,14 @@ class Worker:
             self.local_net.state_in[0]:self.batch_rnn_state[0],
             self.local_net.state_in[1]:self.batch_rnn_state[1],
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
-            self.local_net.ICM.s1:np.vstack(observations[1:]),
+            self.local_net.ICM.s2:np.vstack(observations[1:]),
             self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
+        print("SHAPES {} {} {}".format(np.vstack(observations[:-1]).shape,
+                                       np.vstack(observations[1:]).shape,
+                                       np.vstack(actions_one_hot).shape))
 
-
+        quit()
 
         v_l, p_l, inv_loss,e_l, g_n, v_n, self.batch_rnn_state, _, __ = sess.run(
             [self.local_net.value_loss,
