@@ -67,7 +67,14 @@ class Worker:
         }
         print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
                                               self.local_net.ICM.s2,
-                                              self.local_net.ICM.act_sample))
+                                              self.local_net.ICM.act_sample,
+                                              self.local_net.ICM.f))
+        feed_dict = {
+            self.local_net.ICM.s1:np.vstack(observations[:-1]),
+            self.local_net.ICM.s2:np.vstack(observations[1:]),
+            self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
+        }
+        output = sess.run(self.local_net.ICM.f, feed_dict=feed_dict)
         print("SHAPES {} {} {}".format(np.vstack(observations[:-1]).shape,
                                        np.vstack(observations[1:]).shape,
                                        np.vstack(actions_one_hot).shape))

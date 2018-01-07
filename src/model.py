@@ -110,6 +110,7 @@ class ICM:
             self.act_sample = tf.placeholder(tf.float32, shape=[None, ac_space])
 
             units = 256
+            print("S1{}".format(self.s1))
             s1 = tf.reshape(self.s1, shape=[-1, 84, 84, 1])
             s2 = tf.reshape(self.s2, shape=[-1, 84, 84, 1])
             s1 = generic_input(s1)
@@ -135,11 +136,11 @@ class ICM:
             # Forward model without backprop
             print("S1 {}".format(s1))
             print("ACT_SAMPL {}".format(self.act_sample))
-            f = tf.concat(axis=1,values=[s1, self.act_sample])
-            f = tf.nn.relu(linear(f, units, 'f1', normalized_columns_initializer()))
-            f = linear(f, s1.get_shape()[1].value, 'flast', normalized_columns_initializer())
+            self.f = tf.concat(axis=1,values=[s1, self.act_sample])
+            self.f = tf.nn.relu(linear(self.f, units, 'f1', normalized_columns_initializer()))
+            self.f = linear(self.f, s1.get_shape()[1].value, 'flast', normalized_columns_initializer())
             self.forward_loss = 0.5 * tf.reduce_mean(
-                tf.square(tf.subtract(f, s2)),name='forward_loss')
+                tf.square(tf.subtract(self.f, s2)),name='forward_loss')
             # From paper
             self.forward_loss *= 288
 
