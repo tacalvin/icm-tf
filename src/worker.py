@@ -55,6 +55,7 @@ class Worker:
 
         # update global network from loss
         # Generate network stats
+
         feed_dict = {
             self.local_net.target_v:discount_r,
             self.local_net.inputs:observations[:-1],
@@ -71,10 +72,11 @@ class Worker:
                                               self.local_net.ICM.act_sample,
                                               self.local_net.ICM.f))
         #TODO Major issue is that the number of states is one less than the number of actions in the batch
-        print("SHAPES {} {} {}".format(np.vstack(observations[:-1]).shape,
+        print("SHAPES {} {} {} {}".format(np.vstack(observations[:-1]).shape,
                                        np.vstack(observations[1:]).shape,
-                                       np.vstack(actions_one_hot).shape))
-
+                                          np.vstack(actions_one_hot).shape,
+                                          discount_r.shape))
+        quit()
         v_l, p_l, inv_loss,e_l, g_n, v_n, self.batch_rnn_state, _, __ = sess.run(
             [self.local_net.value_loss,
              self.local_net.policy_loss,
