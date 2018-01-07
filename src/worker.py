@@ -47,7 +47,9 @@ class Worker:
         actions_one_hot = np.array(rollout[:,7])
         # TODO calculate rewards incorporating bonus than apply gradients to icm
         # Generate advantage and discounted rewards
-        self.rewards = np.asarray(rewards.tolist() + [bootstrap_val] + bonus.tolist())
+        self.rewards = np.asarray([sum(x) for x in zip(rewards,bonus)] +
+                                  [bootstrap_val])
+        # self.rewards = np.asarray(rewards.tolist() + [bootstrap_val] + bonus.tolist())
         discount_r = discount(self.rewards,gamma)[:-1]
         self.values = np.asarray(values.tolist() + [bootstrap_val])
         advantages = rewards + gamma * self.values[1:] - self.values[:-1]
@@ -67,16 +69,16 @@ class Worker:
             self.local_net.ICM.s2:observations[1:],
             self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
-        print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
-                                              self.local_net.ICM.s2,
-                                              self.local_net.ICM.act_sample,
-                                              self.local_net.ICM.f))
-        #TODO Major issue is that the number of states is one less than the number of actions in the batch
-        print("SHAPES {} {} {} {}".format(np.vstack(observations[:-1]).shape,
-                                       np.vstack(observations[1:]).shape,
-                                          np.vstack(actions_one_hot).shape,
-                                          discount_r.shape))
-        quit()
+        # print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
+        #                                       self.local_net.ICM.s2,
+        #                                       self.local_net.ICM.act_sample,
+        #                                       self.local_net.ICM.f))
+        # #TODO Major issue is that the number of states is one less than the number of actions in the batch
+        # print("SHAPES {} {} {} {}".format(np.vstack(observations[:-1]).shape,
+        #                                np.vstack(observations[1:]).shape,
+        #                                   np.vstack(actions_one_hot).shape,
+        #                                   discount_r.shape))
+        # quit()
         v_l, p_l, inv_loss,e_l, g_n, v_n, self.batch_rnn_state, _, __ = sess.run(
             [self.local_net.value_loss,
              self.local_net.policy_loss,
