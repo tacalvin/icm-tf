@@ -63,12 +63,13 @@ class Worker:
             self.local_net.state_in[1]:self.batch_rnn_state[1],
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
             self.local_net.ICM.s2:np.vstack(observations[1:]),
-            self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
+            self.local_net.ICM.act_sample:np.vstack(actions_one_hot[:-1])
         }
         print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
                                               self.local_net.ICM.s2,
                                               self.local_net.ICM.act_sample,
                                               self.local_net.ICM.f))
+        #TODO Major issue is that the number of states is one less than the number of actions in the batch
         feed_dict = {
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
             self.local_net.ICM.s2:np.vstack(observations[1:]),
