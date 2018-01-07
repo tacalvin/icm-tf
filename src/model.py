@@ -121,7 +121,7 @@ class ICM:
             x = slim.fully_connected(x,256, activation_fn=tf.nn.elu)
 
             # one hot encoded action vector
-            a_index = tf.argmax(self.act_sample)
+            a_index = tf.argmax(self.act_sample, axis =1)
             logits = linear(x, ac_space, 'last', normalized_columns_initializer())
             print(logits)
             print(a_index)
