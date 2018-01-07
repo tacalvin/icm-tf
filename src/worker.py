@@ -43,6 +43,7 @@ class Worker:
         next_obs = np.array(rollout[:,3])
         values = np.array(rollout[:,5])
         bonus = np.array(rollout[:,6])
+        actions_one_hot = np.array(rollout[:,7])
         # TODO calculate rewards incorporating bonus than apply gradients to icm
         # Generate advantage and discounted rewards
         self.rewards = np.asarray(rewards.tolist() + [bootstrap_val] + bonus.tolist())
@@ -62,7 +63,7 @@ class Worker:
             self.local_net.state_in[1]:self.batch_rnn_state[1],
             self.local_net.ICM.s1:np.vstack(observations[:-1]),
             self.local_net.ICM.s1:np.vstack(observations[1:]),
-            self.local_net.ICM.act_sample:actions.shape
+            self.local_net.ICM.act_sample:actions_one_hot
         }
 
         v_l, p_l, e_l, g_n, v_n, self.batch_rnn_state, _ = sess.run(
@@ -128,10 +129,10 @@ class Worker:
                                      feed_dict={
                                          self.local_net.ICM.s1:[s],
                                          self.local_net.ICM.s2:[s_],
-                                         self.local_net.ICM.act_sample:a_one_hot
+                                         self.local_net.ICM.act_sample:[a_one_hot]
                                      })
 
-                    episode_buffer.append([s,a,r,s_,d,v[0,0],bonus])
+                    episode_buffer.append([s,a,r,s_,d,v[0,0],bonus,a_one_hot])
                     episode_values.append(v[0,0])
 
                     episode_reward += r
