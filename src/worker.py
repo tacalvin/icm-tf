@@ -120,13 +120,15 @@ class Worker:
                     if d:
                         s_ = s
                     # Append to rollout
-                    print(a.shape)
-                    quit()
+
+                    # convert a to one hot encoded vector
+                    a_one_hot = np.zeros(a_dist[0].shape)
+                    a_one_hot[a] = 1
                     bonus = sess.run(self.local_net.ICM.forward_loss,
                                      feed_dict={
                                          self.local_net.ICM.s1:[s],
                                          self.local_net.ICM.s2:[s_],
-                                         self.local_net.ICM.act_sample:[a]
+                                         self.local_net.ICM.act_sample:a_one_hot
                                      })
 
                     episode_buffer.append([s,a,r,s_,d,v[0,0],bonus])

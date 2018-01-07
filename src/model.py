@@ -1,97 +1,7 @@
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import numpy as np
-# def normalized_col_init(std=1.0):
-#             def _init(shape, dtype=None, partition_info=None):
-#                 out = np.random.randn(*shape).astype(np.float32)
-#                 out *= std/np.sqrt(np.square(out).sum(axis=0, keepdims=True))
-#                 return tf.constant(out)
-#             return _init
 
-# class A3C_Network:
-
-#     def __init__(self, obv_space, action_space, scope, trainer):
-#         with tf.variable_scope(scope):
-#             # Here the input is handled
-#             # input will take in a batch of state observations
-#             self.inputs = tf.placeholder(shape=[None] + list(obv_space), dtype=tf.float32)
-#             self.image_in = tf.reshape(self.inputs,shape=[-1, 84, 84, 1])
-
-#             # image encoding
-#             self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
-#                                      inputs=self.image_in,
-#                                      num_outputs=16,
-#                                      kernel_size=[8,8],
-#                                      stride=[4,4],
-#                                      padding='VALID')
-
-#             self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
-#                                      inputs=self.conv1,
-#                                      num_outputs=32,
-#                                      kernel_size=[4,4],
-#                                      stride=[2,2],
-#                                      padding='VALID')
-#             hidden = slim.fully_connected(slim.flatten(self.conv2),
-#                                           256, activation_fn=tf.nn.elu)
-
-#             # Recurrent layer
-#             lstm_cell = tf.nn.rnn_cell.BasicLSTMCell(256,state_is_tuple=True)
-#             c_init = np.zeros((1,lstm_cell.state_size.c), np.float32)
-#             h_init = np.zeros((1,lstm_cell.state_size.h), np.float32)
-#             self.state_init = [c_init, h_init]
-
-#             # LSTM inputs
-#             c_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.c])
-#             h_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.h])
-#             self.state_in = (c_in, h_in)
-#             rnn_in = tf.expand_dims(hidden, [0])
-#             # TODO document shape image shape
-#             step_size = tf.shape(self.image_in)[:1]
-#             state_in = tf.nn.rnn_cell.LSTMStateTuple(c_in, h_in)
-#             lstm_output, lstm_state = tf.nn.dynamic_rnn(lstm_cell, rnn_in,
-#                                                         initial_state=state_in,
-#                                                         sequence_length=step_size,
-#                                                         time_major=False)
-#             lstm_c, lstm_h = lstm_state
-#             # TODO document these state ouputs
-#             self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
-#             rnn_out = tf.reshape(lstm_output, [-1, 256])
-
-#             # Output layers
-#             self.policy = slim.fully_connected(rnn_out, action_space,
-#                                                activation_fn = tf.nn.elu,
-#                                                weights_initializer=normalized_col_init(0.01),
-#                                                biases_initializer=None)
-#             self.value = slim.fully_connected(rnn_out,1,
-#                                               activation_fn=tf.nn.elu,
-#                                               weights_initializer=normalized_col_init(),
-#                                               biases_initializer=None)
-
-#             # Worker ops
-#             if scope != 'global':
-#                 self.actions = tf.placeholder(tf.int32, shape=[None])
-#                 self.actions_onehot = tf.one_hot(self.actions, action_space,
-#                                                  dtype=tf.float32)
-#                 self.target_v = tf.placeholder(shape=[None], dtype=tf.float32)
-#                 self.advantages = tf.placeholder(shape=[None], dtype=tf.float32)
-#                 self.responsible_outs = tf.reduce_sum(self.policy * self.actions_onehot, [1])
-
-#                 # Loss
-#                 self.value_loss = 0.5 * tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value,[-1])))
-#                 self.entropy = - tf.reduce_sum(self.policy * tf.log(self.policy))
-#                 self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outs)*self.advantages)
-#                 self.loss = 0.5 * self.value_loss + self.policy_loss - self.entropy * 0.01
-
-#                 # Get Gradients and update variables
-#                 local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
-#                 self.grads = tf.gradients(self.loss, local_vars)
-#                 self.var_norm = tf.global_norm(local_vars)
-#                 # TODO Document why we clip 40.0
-#                 grads, self.grad_norms = tf.clip_by_global_norm(self.grads, 40.0)
-
-#                 # Apply grads
-#                 global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
-#                 self.apply_grads = trainer.apply_gradients(zip(grads, global_vars))
 def normalized_columns_initializer(std=1.0):
     def _initializer(shape, dtype=None, partition_info=None):
         out = np.random.randn(*shape).astype(np.float32)
@@ -197,7 +107,7 @@ class ICM:
         with tf.variable_scope(scope):
             self.s1 = s1= tf.placeholder(tf.float32, [None, ob_space])
             self.s2 = s2 = tf.placeholder(tf.float32, [None, ob_space])
-            self.act_sample = tf.placeholder(tf.float32, [None, ac_space])
+            self.act_sample = tf.placeholder(tf.float32, [ac_space])
 
             units = 256
             s1 = tf.reshape(self.s1, shape=[-1, 84, 84, 1])
@@ -210,12 +120,13 @@ class ICM:
             x = slim.fully_connected(x,256, activation_fn=tf.nn.elu)
 
             # one hot encoded action vector
-            a_index = tf.argmax(self.act_sample, axis = 1)
-            logits = linear(x, ac_space, scope, init= normalized_columns_initializer(.01))
+            a_index = tf.argmax(self.act_sample)
+            logits = linear(x, ac_space, 'last', normalized_columns_initializer())
 
             self.inv_loss = tf.reduce_mean(
                 tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,
-                                                               labels=a_index))
+                                                               labels = a_index))
+
             self.a_inv_probs = tf.nn.softmax(logits)
 
             # Forward model without backprop

@@ -17,6 +17,8 @@ ENV = 'mario'
 env_test = create_env(ENV,0,0)
 obv_space = 7056 # env_test.observation_space.shape
 action_space = env_test.action_space.n
+print(action_space)
+quit()
 load_model = False
 model_path = './model'
 
