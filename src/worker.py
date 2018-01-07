@@ -65,6 +65,9 @@ class Worker:
             self.local_net.ICM.s2:np.vstack(observations[1:]),
             self.local_net.ICM.act_sample:np.vstack(actions_one_hot)
         }
+        print("INPUT TENSORS {} {} {}".format(self.local_net.ICM.s1,
+                                              self.local_net.ICM.s2,
+                                              self.local_net.ICM.act_sample))
         print("SHAPES {} {} {}".format(np.vstack(observations[:-1]).shape,
                                        np.vstack(observations[1:]).shape,
                                        np.vstack(actions_one_hot).shape))
