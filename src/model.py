@@ -10,8 +10,7 @@ def normalized_columns_initializer(std=1.0):
     return _initializer
 
 
-
-
+# A3C written by https://github.com/awjuliani/DeepRL-Agents
 class A3C_Network():
     def __init__(self, s_size, a_size, scope, trainer):
         with tf.variable_scope(scope):
